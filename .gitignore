@@ -1,0 +1,47 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### Node Modules ###
+
+node_modules/
+
+### Logs ###
+*.log
+logs/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Secrets ###
+.env
+*.env
+application-local.properties
+application-prod.properties
+firmware/gateway/config.h
+firmware/node/config.h
+firmware/RUNBOOK.md
+
+### Docker ###
+docker-compose.override.yml
+
+### PlatformIO ###
+.pio/
