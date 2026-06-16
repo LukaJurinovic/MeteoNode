@@ -8,7 +8,7 @@
 #include <Preferences.h>
 #include <time.h>
 #include <sms_format.h>
-#include "config.h"
+#include "config.demo.h"
 
 String ssid = WIFI_SSID;
 String password = WIFI_PASSWORD;

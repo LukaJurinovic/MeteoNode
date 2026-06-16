@@ -37,11 +37,16 @@ Thumbs.db
 application-local.properties
 application-prod.properties
 firmware/gateway/config.h
+firmware/gateway/config.demo.h
 firmware/node/config.h
 firmware/RUNBOOK.md
 
 ### Docker ###
 docker-compose.override.yml
+
+### Internal docs (not for publication) ###
+plan.md
+MeteoNode_zavrsni_rad.docx
 
 ### PlatformIO ###
 .pio/
