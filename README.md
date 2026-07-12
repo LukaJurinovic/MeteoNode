@@ -6,7 +6,7 @@ bridges the cellular network to a Spring Boot REST API, and a React dashboard gi
 operators a live view of every station.
 
 ```
-[Sensor node] ──SMS──► [Gateway] ──HTTP──► [Backend] ◄──HTTP── [React frontend]
+[Sensor node] ──SMS──► [Gateway] ──HTTP──► [Backend] ◄──HTTP──► [React frontend]
  ESP32 + SIM800L         ESP32              Spring Boot          browser
  BMP280 · DHT11          WiFi + SIM         MySQL
  GUVA · BH1750
