@@ -91,7 +91,9 @@ static float bmpReadPressure() {
 #define CMD_BODY_TIMEOUT_MS 5000UL
 
 #define CMD_DEDUP_MAX 8
-#define CMD_DEDUP_WINDOW_MS 120000UL  // ignore a repeated cmdId seen within this window
+#define CMD_DEDUP_WINDOW_MS 240000UL  // ignore a repeated cmdId seen within this window;
+                                      // must exceed the backend resend window (180s) so a
+                                      // gateway resend of an already-handled command is dropped
 
 HardwareSerial gsm(2);
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -326,18 +328,26 @@ void rememberCmd(int cmdId) {
 void handleCommand(const String& line) {
   ParsedCommand batch[PENDING_ACK_MAX];
   int n = splitBatch(line.c_str(), batch, PENDING_ACK_MAX);
-  bool needReadings = false;
+  bool needReport = false;
   for (int i = 0; i < n; i++) {
     if (cmdRecentlyProcessed(batch[i].cmdId)) {
       Serial.println("Duplicate cmdId " + String(batch[i].cmdId) + ", skipping.");
       continue;
     }
     rememberCmd(batch[i].cmdId);
-    if (strcmp(batch[i].type, "REQUEST_READINGS") == 0) needReadings = true;
+    // SET_INTERVAL reports right away too: its CONF only travels with a reading,
+    // and the gateway resends unconfirmed commands every 3 min (one SMS each).
+    if (strcmp(batch[i].type, "REQUEST_READINGS") == 0 ||
+        strcmp(batch[i].type, "SET_INTERVAL") == 0) needReport = true;
     processCommand(batch[i]);
   }
 
-  if (needReadings) sendReadings();
+  // One message carries every CONF in the batch; restart the schedule from now
+  // so the new interval is measured from this report.
+  if (needReport) {
+    sendReadings();
+    lastSend = millis();
+  }
 }
 
 bool sendSMS(const char* number, const String& text) {
