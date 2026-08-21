@@ -104,6 +104,7 @@ unsigned long reportIntervalSecs = 86400UL;
 unsigned long lastSend = 0;
 String smsBuffer = "";
 bool expectsCmd = false;
+bool cmdFromGateway = false;
 unsigned long expectsSince = 0;
 bool bmpOk = false;
 bool lightOk = false;
@@ -199,6 +200,11 @@ void loop() {
       line.trim();
 
       if (line.startsWith("+CMT:")) {
+        // Sender sits in the first quoted field: +CMT: "+385...",,"25/06/09,..."
+        int q1 = line.indexOf('"');
+        int q2 = (q1 >= 0) ? line.indexOf('"', q1 + 1) : -1;
+        String sender = (q2 > q1) ? line.substring(q1 + 1, q2) : "";
+        cmdFromGateway = samePhone(sender.c_str(), GATEWAY_NUMBER);
         expectsCmd = true;
         expectsSince = millis();
       } else if (expectsCmd) {
@@ -207,7 +213,11 @@ void loop() {
           Serial.println("CMD body timeout, discarding.");
         } else if (line.length() > 0) {
           expectsCmd = false;
-          if (line.startsWith("CMD:")) handleCommand(line);
+          if (!cmdFromGateway) {
+            Serial.println("SMS not from gateway number, skipping: " + line);
+          } else if (line.startsWith("CMD:")) {
+            handleCommand(line);
+          }
         }
       }
     }

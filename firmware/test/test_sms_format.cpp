@@ -192,6 +192,23 @@ void test_buildCapsSms_all_four(void) {
     TEST_ASSERT_EQUAL_STRING("CAPS:NODE-001:BMP280,DHT11,GUVA_S12SD,GY_302", buf);
 }
 
+void test_samePhone_international_vs_national(void) {
+    TEST_ASSERT_TRUE(samePhone("+385912345678", "0912345678"));
+}
+
+void test_samePhone_ignores_spaces_and_dashes(void) {
+    TEST_ASSERT_TRUE(samePhone("+385 91 234-5678", "091/234 5678"));
+}
+
+void test_samePhone_different_numbers(void) {
+    TEST_ASSERT_FALSE(samePhone("+385912345678", "+385998765432"));
+}
+
+void test_samePhone_too_short(void) {
+    TEST_ASSERT_FALSE(samePhone("12345678", "12345678"));
+    TEST_ASSERT_FALSE(samePhone("", "+385912345678"));
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_parseOrNan_nan_lowercase);
@@ -221,5 +238,9 @@ int main(void) {
     RUN_TEST(test_parseCapsBody_wrong_prefix);
     RUN_TEST(test_buildCapsSms_two_sensors);
     RUN_TEST(test_buildCapsSms_all_four);
+    RUN_TEST(test_samePhone_international_vs_national);
+    RUN_TEST(test_samePhone_ignores_spaces_and_dashes);
+    RUN_TEST(test_samePhone_different_numbers);
+    RUN_TEST(test_samePhone_too_short);
     return UNITY_END();
 }

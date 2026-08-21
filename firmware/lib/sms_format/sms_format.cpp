@@ -171,3 +171,34 @@ int buildCapsSms(const char* serial, const char* const* sensors, int count, char
     }
     return written;
 }
+
+// Compare only the subscriber part: the same line reaches us as "+385912345678",
+// "0912345678" or "091 234-5678" depending on operator and stored form.
+#define PHONE_MATCH_DIGITS 9
+
+// Copies the last PHONE_MATCH_DIGITS digits of s into out (which must hold
+// PHONE_MATCH_DIGITS + 1 bytes), skipping every non-digit character.
+// Returns false if s holds fewer digits than that.
+static bool tailDigits(const char* s, char* out) {
+    int total = 0;
+    for (const char* p = s; *p; p++)
+        if (*p >= '0' && *p <= '9') total++;
+    if (total < PHONE_MATCH_DIGITS) return false;
+
+    int skip = total - PHONE_MATCH_DIGITS;
+    int n = 0;
+    for (const char* p = s; *p; p++) {
+        if (*p < '0' || *p > '9') continue;
+        if (skip > 0) { skip--; continue; }
+        out[n++] = *p;
+    }
+    out[n] = '\0';
+    return true;
+}
+
+bool samePhone(const char* a, const char* b) {
+    if (!a || !b) return false;
+    char ta[PHONE_MATCH_DIGITS + 1], tb[PHONE_MATCH_DIGITS + 1];
+    if (!tailDigits(a, ta) || !tailDigits(b, tb)) return false;
+    return strcmp(ta, tb) == 0;
+}

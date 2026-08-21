@@ -39,3 +39,7 @@ int buildNodeSms(const char* serial, float t, float p, float h,
                  char* out, int outLen);
 bool parseCapsBody(const char* line, CapsBody* out);
 int buildCapsSms(const char* serial, const char* const* sensors, int count, char* out, int outLen);
+
+// True when a and b end in the same nine digits, ignoring every non-digit
+// character ('+', spaces, dashes). False if either holds fewer than nine digits.
+bool samePhone(const char* a, const char* b);

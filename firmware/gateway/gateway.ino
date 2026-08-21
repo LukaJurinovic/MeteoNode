@@ -329,6 +329,18 @@ void handleNodeSMS(const String& body, const String& senderNumber) {
     return;
   }
 
+  // The serial in the body is not proof of identity: bind it to the number the
+  // first message came from, then refuse readings sent from any other number.
+  if (node->phoneNumber.isEmpty()) {
+    node->phoneNumber = senderNumber;
+    saveRegistry();
+    Serial.println("Bound " + serial + " to " + senderNumber + ".");
+  } else if (!samePhone(node->phoneNumber.c_str(), senderNumber.c_str())) {
+    Serial.println("Data SMS for " + serial + " came from " + senderNumber +
+                   " but node is bound to " + node->phoneNumber + ", ignoring.");
+    return;
+  }
+
   char iso[25];
   if (!getIso(iso)) {
     Serial.println("Clock not NTP-synced; re-syncing and dropping batch from " + serial + ".");
@@ -375,7 +387,15 @@ NodeRecord* findNode(const String& serial) {
 NodeRecord* findOrRegisterNode(const String& serial, const String& phoneNumber, const char** sensors, int sensorCount) {
   for (int i = 0; i < MAX_NODES; i++) {
     if (nodes[i].active && nodes[i].serialNumber == serial) {
-      if (nodes[i].phoneNumber.isEmpty()) nodes[i].phoneNumber = phoneNumber;
+      if (nodes[i].phoneNumber.isEmpty()) {
+        nodes[i].phoneNumber = phoneNumber;
+      } else if (!samePhone(nodes[i].phoneNumber.c_str(), phoneNumber.c_str())) {
+        // Without this, re-announcing CAPS from another number would rebind the
+        // serial and hand the binding check in handleNodeSMS to the sender.
+        Serial.println("CAPS for " + serial + " came from " + phoneNumber +
+                       " but node is bound to " + nodes[i].phoneNumber + ", rejecting.");
+        return nullptr;
+      }
       return &nodes[i];
     }
   }
@@ -586,8 +606,8 @@ void handleCapsSms(const String& body, const String& senderNumber) {
   const char* sensorPtrs[SMS_SENSOR_LIST_MAX];
   for (int i = 0; i < caps.sensorCount; i++) sensorPtrs[i] = caps.sensors[i];
   String serial = String(caps.serial);
-  findOrRegisterNode(serial, senderNumber, sensorPtrs, caps.sensorCount);
-  Serial.println("CAPS registered: " + serial + " (" + String(caps.sensorCount) + " sensors)");
+  if (findOrRegisterNode(serial, senderNumber, sensorPtrs, caps.sensorCount))
+    Serial.println("CAPS registered: " + serial + " (" + String(caps.sensorCount) + " sensors)");
 }
 
 int httpRequest(bool isPost, const char* url, String& payload, String& responseBody) {
