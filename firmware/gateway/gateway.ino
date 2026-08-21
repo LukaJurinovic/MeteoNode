@@ -589,7 +589,7 @@ void confirmCommandById(const String& serialNumber, int cmdId) {
 void handleCommandConfirm(const String& body, const String& senderNumber) {
   int cmdId = body.substring(5).toInt();
   for (int i = 0; i < MAX_NODES; i++) {
-    if (nodes[i].active && nodes[i].phoneNumber == senderNumber) {
+    if (nodes[i].active && samePhone(nodes[i].phoneNumber.c_str(), senderNumber.c_str())) {
       confirmCommandById(nodes[i].serialNumber, cmdId);
       return;
     }
